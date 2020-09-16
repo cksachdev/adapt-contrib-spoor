@@ -106,6 +106,15 @@
                   "required": false,
                   "title": "Advanced Settings",
                   "properties": {
+                   "_scormVersion": {
+                      "type": "string",
+                      "required": true,
+                      "default": "2004",
+                      "title": "SCROM version",
+                      "inputType": "Text",
+                      "validators": ["required"],
+                      "help": "Sets the SCORM version."
+                    },
                     "_showDebugWindow": {
                       "type": "boolean",
                       "required": false,

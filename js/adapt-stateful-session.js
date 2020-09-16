@@ -3,7 +3,7 @@ define([
   './serializers/default',
   './serializers/questions',
   'core/js/enums/completionStateEnum'
-], function(Adapt, serializer, questions, COMPLETION_STATE) {
+], function (Adapt, serializer, questions, COMPLETION_STATE) {
 
   // Implements Adapt session statefulness
 
@@ -14,7 +14,7 @@ define([
     _shouldRecordInteractions: true,
 
     // Session Begin
-    initialize: function(callback) {
+    initialize: function (callback) {
       this._onWindowUnload = this.onWindowUnload.bind(this);
 
       this.getConfig();
@@ -22,14 +22,14 @@ define([
       this.getLearnerInfo();
 
       // Restore state asynchronously to prevent IE8 freezes
-      this.restoreSessionState(function() {
+      this.restoreSessionState(function () {
         // still need to defer call because AdaptModel.check*Status functions are asynchronous
         _.defer(this.setupEventListeners.bind(this));
         callback();
       }.bind(this));
     },
 
-    getConfig: function() {
+    getConfig: function () {
       this._config = Adapt.config.has('_spoor') ? Adapt.config.get('_spoor') : false;
 
       this._shouldStoreResponses = (this._config && this._config._tracking && this._config._tracking._shouldStoreResponses);
@@ -44,7 +44,7 @@ define([
      * Replace the hard-coded _learnerInfo data in _globals with the actual data from the LMS
      * If the course has been published from the AT, the _learnerInfo object won't exist so we'll need to create it
      */
-    getLearnerInfo: function() {
+    getLearnerInfo: function () {
       var globals = Adapt.course.get('_globals');
       if (!globals._learnerInfo) {
         globals._learnerInfo = {};
@@ -52,16 +52,16 @@ define([
       _.extend(globals._learnerInfo, Adapt.offlineStorage.get("learnerinfo"));
     },
 
-    saveSessionState: function() {
+    saveSessionState: function () {
       var sessionPairs = this.getSessionState();
       Adapt.offlineStorage.set(sessionPairs);
     },
 
-    restoreSessionState: function(callback) {
+    restoreSessionState: function (callback) {
       var sessionPairs = Adapt.offlineStorage.get();
       var hasNoPairs = _.keys(sessionPairs).length === 0;
 
-      var doSynchronousPart = function() {
+      var doSynchronousPart = function () {
         if (sessionPairs.questions && this._shouldStoreResponses) questions.deserialize(sessionPairs.questions);
         if (sessionPairs._isCourseComplete) Adapt.course.set('_isComplete', sessionPairs._isCourseComplete);
         if (sessionPairs._isAssessmentPassed) Adapt.course.set('_isAssessmentPassed', sessionPairs._isAssessmentPassed);
@@ -78,7 +78,7 @@ define([
       }
     },
 
-    getSessionState: function() {
+    getSessionState: function () {
       var sessionPairs = {
         "completion": serializer.serialize(),
         "questions": (this._shouldStoreResponses === true ? questions.serialize() : ""),
@@ -89,7 +89,7 @@ define([
     },
 
     // Session In Progress
-    setupEventListeners: function() {
+    setupEventListeners: function () {
       $(window).on('beforeunload unload', this._onWindowUnload);
 
       if (this._shouldStoreResponses) {
@@ -113,22 +113,22 @@ define([
       this.stopListening();
     },
 
-    reattachEventListeners: function() {
+    reattachEventListeners: function () {
       this.removeEventListeners();
       this.setupEventListeners();
     },
 
-    onBlockComplete: function(block) {
+    onBlockComplete: function (block) {
       this.saveSessionState();
     },
 
-    onQuestionComponentComplete: function(component) {
+    onQuestionComponentComplete: function (component) {
       if (!component.get("_isQuestionType")) return;
 
       this.saveSessionState();
     },
 
-    onTrackingComplete: function(completionData) {
+    onTrackingComplete: function (completionData) {
       this.saveSessionState();
 
       var completionStatus = completionData.status.asLowerCase;
@@ -158,7 +158,7 @@ define([
       Adapt.offlineStorage.set("status", completionStatus);
     },
 
-    onAssessmentComplete: function(stateModel) {
+    onAssessmentComplete: function (stateModel) {
       Adapt.course.set('_isAssessmentPassed', stateModel.isPass);
 
       this.saveSessionState();
@@ -166,19 +166,21 @@ define([
       this.submitScore(stateModel);
     },
 
-    onQuestionRecordInteraction:function(questionView) {
+    onQuestionRecordInteraction: function (questionView) {
       var responseType = questionView.getResponseType();
 
       // If responseType doesn't contain any data, assume that the question
       // component hasn't been set up for cmi.interaction tracking
-      if(_.isEmpty(responseType)) return;
+      if (_.isEmpty(responseType)) return;
 
       var id = questionView.model.get('_id');
       var response = questionView.getResponse();
       var result = questionView.isCorrect();
       var latency = questionView.getLatency();
+      const title = questionView.model.get('title');
 
-      Adapt.offlineStorage.set("interaction", id, response, result, latency, responseType);
+      Adapt.offlineStorage.set('interaction', id, response, result, latency, responseType, title);
+      // Adapt.offlineStorage.set("interaction", id, response, result, latency, responseType);
     },
 
     /**
@@ -197,7 +199,7 @@ define([
       }
     },
 
-    submitScore: function(stateModel) {
+    submitScore: function (stateModel) {
       if (this._config && !this._config._tracking._shouldSubmitScore) return;
 
       if (stateModel.isPercentageBased) {
@@ -208,7 +210,7 @@ define([
     },
 
     // Session End
-    onWindowUnload: function() {
+    onWindowUnload: function () {
       this.removeEventListeners();
     }
 

@@ -1,9 +1,7 @@
-define([
-  'core/js/adapt',
-  './scorm',
-  'core/js/offlineStorage'
-], function(Adapt, scorm) {
-
+define(['core/js/adapt', './scorm', 'core/js/offlineStorage'], function (
+  Adapt,
+  scorm
+) {
   //SCORM handler for Adapt.offlineStorage interface.
 
   //Stores to help handle posting and offline uniformity
@@ -12,8 +10,7 @@ define([
   var suspendDataRestored = false;
 
   Adapt.offlineStorage.initialize({
-
-    get: function(name) {
+    get: function (name) {
       if (name === undefined) {
         //If not connected return just temporary store.
         if (this.useTemporaryStore()) return temporaryStore;
@@ -26,7 +23,7 @@ define([
           score: scorm.getScore(),
           status: scorm.getStatus(),
           student: scorm.getStudentName(),
-          learnerInfo: this.getLearnerInfo()
+          learnerInfo: this.getLearnerInfo(),
         });
 
         suspendDataRestored = true;
@@ -39,29 +36,29 @@ define([
 
       //Get by name
       switch (name.toLowerCase()) {
-        case "location":
+        case 'location':
           return scorm.getLessonLocation();
-        case "score":
+        case 'score':
           return scorm.getScore();
-        case "status":
+        case 'status':
           return scorm.getStatus();
-        case "student":// for backwards-compatibility. learnerInfo is preferred now and will give you more information
+        case 'student': // for backwards-compatibility. learnerInfo is preferred now and will give you more information
           return scorm.getStudentName();
-        case "learnerinfo":
+        case 'learnerinfo':
           return this.getLearnerInfo();
         default:
           return this.getCustomState(name);
       }
     },
 
-    set: function(name, value) {
+    set: function (name, value) {
       //Convert arguments to array and drop the 'name' parameter
       var args = [].slice.call(arguments, 1);
-      var isObject = typeof name == "object";
+      var isObject = typeof name == 'object';
 
       if (isObject) {
         value = name;
-        name = "suspendData";
+        name = 'suspendData';
       }
 
       if (this.useTemporaryStore()) {
@@ -75,24 +72,24 @@ define([
       }
 
       switch (name.toLowerCase()) {
-        case "interaction":
+        case 'interaction':
           return scorm.recordInteraction.apply(scorm, args);
-        case "location":
+        case 'location':
           return scorm.setLessonLocation.apply(scorm, args);
-        case "score":
+        case 'score':
           return scorm.setScore.apply(scorm, args);
-        case "status":
+        case 'status':
           return scorm.setStatus.apply(scorm, args);
-        case "student":
-        case "learnerinfo":
-          return false;// these properties are read-only
-        case "lang":
+        case 'student':
+        case 'learnerinfo':
+          return false; // these properties are read-only
+        case 'lang':
           scorm.setLanguage(value);
           // fall-through so that lang gets stored in suspend_data as well:
           // because in SCORM 1.2 cmi.student_preference.language is an optional data element
           // so we can't rely on the LMS having support for it.
           // If it does support it we may as well save the user's choice there purely for reporting purposes
-        case "suspenddata":
+        case 'suspenddata':
         default:
           if (isObject) {
             suspendDataStore = _.extend(suspendDataStore, value);
@@ -101,28 +98,37 @@ define([
           }
 
           var dataAsString = JSON.stringify(suspendDataStore);
-          return (suspendDataRestored) ? scorm.setSuspendData(dataAsString) : false;
+          return suspendDataRestored ?
+            scorm.setSuspendData(dataAsString) :
+            false;
       }
     },
 
-    getCustomStates: function() {
+    getCustomStates: function () {
       var isSuspendDataStoreEmpty = _.isEmpty(suspendDataStore);
-      if (!isSuspendDataStoreEmpty && suspendDataRestored) return _.clone(suspendDataStore);
+      if (!isSuspendDataStoreEmpty && suspendDataRestored)
+        return _.clone(suspendDataStore);
 
       var dataAsString = scorm.getSuspendData();
-      if (dataAsString === "" || dataAsString === " " || dataAsString === undefined) return {};
+      if (
+        dataAsString === '' ||
+        dataAsString === ' ' ||
+        dataAsString === undefined
+      )
+        return {};
 
       var dataAsJSON = JSON.parse(dataAsString);
-      if (!isSuspendDataStoreEmpty && !suspendDataRestored) dataAsJSON = _.extend(dataAsJSON, suspendDataStore);
+      if (!isSuspendDataStoreEmpty && !suspendDataRestored)
+        dataAsJSON = _.extend(dataAsJSON, suspendDataStore);
       return dataAsJSON;
     },
 
-    getCustomState: function(name) {
+    getCustomState: function (name) {
       var dataAsJSON = this.getCustomStates();
       return dataAsJSON[name];
     },
 
-    useTemporaryStore: function() {
+    useTemporaryStore: function () {
       var cfg = Adapt.config.get('_spoor');
 
       if (!scorm.lmsConnected || (cfg && cfg._isEnabled === false)) return true;
@@ -136,26 +142,27 @@ define([
      * - firstname
      * - lastname
      */
-    getLearnerInfo: function() {
+    getLearnerInfo: function () {
       var name = scorm.getStudentName();
-      var firstname = "", lastname = "";
-      if (name && name !== 'undefined' && name.indexOf(",") > -1) {
+      var firstname = '',
+        lastname = '';
+      if (name && name !== 'undefined' && name.indexOf(',') > -1) {
         //last name first, comma separated
-        var nameSplit = name.split(",");
+        var nameSplit = name.split(',');
         lastname = $.trim(nameSplit[0]);
         firstname = $.trim(nameSplit[1]);
-        name = firstname + " " + lastname;
+        name = firstname + ' ' + lastname;
       } else {
-        console.log("SPOOR: LMS learner_name not in 'lastname, firstname' format");
+        console.log(
+          "SPOOR: LMS learner_name not in 'lastname, firstname' format"
+        );
       }
       return {
         name: name,
         lastname: lastname,
         firstname: firstname,
-        id: scorm.getStudentId()
+        id: scorm.getStudentId(),
       };
-    }
-
+    },
   });
-
 });
