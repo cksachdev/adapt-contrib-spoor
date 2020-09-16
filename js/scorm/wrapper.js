@@ -318,7 +318,7 @@ define([
     }
   };
 
-  ScormWrapper.prototype.recordInteraction = function (id, response, correct, latency, type) {
+  ScormWrapper.prototype.recordInteraction = function (id, response, correct, latency, type, title) {
     if (this.isSupported("cmi.interactions._count")) {
       switch (type) {
         case "choice":
@@ -488,7 +488,7 @@ define([
   };
 
 
-  ScormWrapper.prototype.recordInteractionScorm2004 = function (id, response, correct, latency, type) {
+  ScormWrapper.prototype.recordInteractionScorm2004 = function (id, response, correct, latency, type, title) {
 
     id = this.trim(id);
 
@@ -496,6 +496,7 @@ define([
 
     this.setValue(cmiPrefix + ".id", id);
     this.setValue(cmiPrefix + ".type", type);
+    this.setValue(cmiPrefix + ".description", title);
     this.setValue(cmiPrefix + ".learner_response", response);
     this.setValue(cmiPrefix + ".result", correct ? "correct" : "incorrect");
     if (latency !== null && latency !== undefined) this.setValue(cmiPrefix + ".latency", this.convertToSCORM2004Time(latency));
@@ -503,7 +504,7 @@ define([
   };
 
 
-  ScormWrapper.prototype.recordInteractionMultipleChoice = function (id, response, correct, latency, type) {
+  ScormWrapper.prototype.recordInteractionMultipleChoice = function (id, response, correct, latency, type, title) {
 
     if (this.isSCORM2004()) {
       response = response.replace(/,|#/g, "[,]");
@@ -514,11 +515,11 @@ define([
 
     var scormRecordInteraction = this.isSCORM2004() ? this.recordInteractionScorm2004 : this.recordInteractionScorm12;
 
-    scormRecordInteraction.call(this, id, response, correct, latency, type);
+    scormRecordInteraction.call(this, id, response, correct, latency, type, title);
   };
 
 
-  ScormWrapper.prototype.recordInteractionMatching = function (id, response, correct, latency, type) {
+  ScormWrapper.prototype.recordInteractionMatching = function (id, response, correct, latency, type, title) {
 
     response = response.replace(/#/g, ",");
 
@@ -531,11 +532,11 @@ define([
 
     var scormRecordInteraction = this.isSCORM2004() ? this.recordInteractionScorm2004 : this.recordInteractionScorm12;
 
-    scormRecordInteraction.call(this, id, response, correct, latency, type);
+    scormRecordInteraction.call(this, id, response, correct, latency, type, title);
   };
 
 
-  ScormWrapper.prototype.recordInteractionFillIn = function (id, response, correct, latency, type) {
+  ScormWrapper.prototype.recordInteractionFillIn = function (id, response, correct, latency, type, title) {
 
     var maxLength = this.isSCORM2004() ? 250 : 255;
 
@@ -547,7 +548,7 @@ define([
 
     var scormRecordInteraction = this.isSCORM2004() ? this.recordInteractionScorm2004 : this.recordInteractionScorm12;
 
-    scormRecordInteraction.call(this, id, response, correct, latency, type);
+    scormRecordInteraction.call(this, id, response, correct, latency, type, title);
   };
 
   ScormWrapper.prototype.showDebugWindow = function () {
